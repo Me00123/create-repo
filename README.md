@@ -1,50 +1,47 @@
-# Create Repo Action
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prédiction de Match FIFA</title>
+</head>
+<body>
+    <h2>Entrez les scores passés</h2>
+    <input type="text" id="scoreInput" placeholder="Ex: 2-1">
+    <button onclick="ajouterScore()">Ajouter Score</button>
+    <button onclick="predireVainqueur()">Prédire</button>
+    <p id="resultat"></p>
 
-This action will create a repository in the organization specified. 
+    <script>
+        let scores = [];
 
-## Inputs:
+        function ajouterScore() {
+            let input = document.getElementById("scoreInput").value;
+            if (/^\d+-\d+$/.test(input)) {
+                scores.push(input);
+                document.getElementById("scoreInput").value = "";
+            } else {
+                alert("Format invalide. Utilisez '2-1' par exemple.");
+            }
+        }
 
-`repo-name`: Name of the repository
+        function predireVainqueur() {
+            let winA = 0, winB = 0, draw = 0;
 
-`org-name`: Name of the organization
+            scores.forEach(score => {
+                let [a, b] = score.split('-').map(Number);
+                if (a > b) winA++;
+                else if (b > a) winB++;
+                else draw++;
+            });
 
-`org-admin-token`: Org admin token with `repo` and `admin:org` scope
+            let resultat = (winA > winB) ? "L'équipe A a plus de chances de gagner !" :
+                           (winB > winA) ? "L'équipe B est favorite !" :
+                           "Le match risque d'être nul !";
 
-## Outputs:
-
-`repo-url`: URL of the newly created repo. Blank if error.
-`repo-fullname`: Fullname of the newly created repo. Blank if error.
-
-## Demo Workflow:
-
-### Secrets needed:
-
-Create a Personal Access Token with relevant scopes and save it as a Repo Secret, or create a github app, and get a token from the app - 
-`ORG_ADMIN_TOKEN`
-
-```
-name: Create Repo
-on: 
-  workflow_dispatch:
-    inputs:
-      repo-name: 
-        description: 'Name of the repository to be created'
-        required: true
-        default: ''
-
-jobs:
-  create-repository:
-    runs-on: ubuntu-latest
-    name: Creating Organization Repository
-    steps:
-      - name: Use Node.js
-        uses: actions/setup-node@v2
-      - name: Creating GitHub Organization Repository
-        uses: repo-ctrl/create-repo-action@main 
-        id: create-repo
-        with:
-          repo-name: '${{ github.event.inputs.repo-name }}'
-          org-admin-token: '${{ secrets.ORG_ADMIN_TOKEN }}'
-      - name: Log URL to the repo
-        run: echo "The new repo is ${{ steps.create-repo.outputs.repo-url }}"
-```
+            document.getElementById("resultat").innerText = resultat;
+            scores = [];
+        }
+    </script>
+</body>
+</html>
